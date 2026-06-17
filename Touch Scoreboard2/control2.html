@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Scoreboard Control 2</title>
+
+<style>
+
+body{
+margin:0;
+background:#050505;
+color:white;
+font-family:Arial;
+padding:10px;
+}
+
+.card{
+background:#161616;
+border-radius:18px;
+padding:12px;
+margin-bottom:12px;
+}
+
+button{
+width:48%;
+height:50px;
+margin:4px 0;
+border:0;
+border-radius:12px;
+background:#262626;
+color:white;
+font-size:16px;
+font-weight:bold;
+}
+
+.full{
+width:100%;
+}
+
+.homeBtn{
+background:#002b7f;
+}
+
+.awayBtn{
+background:#6a1032;
+}
+
+input{
+width:100%;
+padding:12px;
+font-size:18px;
+box-sizing:border-box;
+background:#222;
+color:white;
+border:0;
+border-radius:10px;
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<div class="card">
+
+<h2>NSW</h2>
+
+<button class="homeBtn" onclick="score('home',1)">+1</button>
+<button onclick="score('home',-1)">-1</button>
+
+</div>
+
+
+<div class="card">
+
+<h2>QLD</h2>
+
+<button class="awayBtn" onclick="score('away',1)">+1</button>
+<button onclick="score('away',-1)">-1</button>
+
+</div>
+
+
+<div class="card">
+
+<h2>Clock</h2>
+
+<input id="mins" value="15" type="number">
+
+
+<button class="full" onclick="setClock()">SET TIME</button>
+
+<button class="full" onclick="startClock()">START</button>
+
+<button class="full" onclick="pauseClock()">PAUSE</button>
+
+<button class="full" onclick="half('H1')">HALF 1</button>
+
+<button class="full" onclick="half('H2')">HALF 2</button>
+
+
+</div>
+
+
+
+<script type="module">
+
+
+import {
+initializeApp
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+
+
+import {
+getDatabase,
+ref,
+get,
+update
+} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
+
+
+
+const firebaseConfig = {
+
+apiKey:"AIzaSyBEYrxxYkYkEzuHlHoc433EfI7mq8gvn60",
+
+authDomain:"scoreboard2-5560e.firebaseapp.com",
+
+databaseURL:"https://scoreboard2-5560e-default-rtdb.asia-southeast1.firebasedatabase.app",
+
+projectId:"scoreboard2-5560e",
+
+storageBucket:"scoreboard2-5560e.firebasestorage.app",
+
+messagingSenderId:"577309983779",
+
+appId:"1:577309983779:web:da1ade347e76f5174a5d96"
+
+};
+
+
+const app=initializeApp(firebaseConfig);
+
+const db=getDatabase(app);
+
+
+const board=ref(db,"scoreboard");
+
+
+
+async function data(){
+
+return (await get(board)).val();
+
+}
+
+
+
+
+window.score=async(team,value)=>{
+
+
+let d=await data();
+
+
+let current=d[team].score || 0;
+
+
+let patch={};
+
+
+patch[team+"/score"]=
+Math.max(0,current+value);
+
+
+
+if(value>0){
+
+patch["tryEventId"]=Date.now();
+
+}
+
+
+await update(board,patch);
+
+};
+
+
+
+
+window.setClock=async()=>{
+
+
+let mins=
+Number(document.getElementById("mins").value);
+
+
+
+await update(board,{
+
+"clock/duration":mins*60,
+
+"clock/startTime":null,
+
+"clock/running":false
+
+});
+
+
+};
+
+
+
+
+window.startClock=async()=>{
+
+
+await update(board,{
+
+"clock/running":true,
+
+"clock/startTime":Date.now()
+
+});
+
+
+};
+
+
+
+
+window.pauseClock=async()=>{
+
+
+let d=await data();
+
+
+let elapsed=
+Math.floor(
+(Date.now()-d.clock.startTime)/1000
+);
+
+
+
+let remaining =
+Math.max(
+0,
+d.clock.duration-elapsed
+);
+
+
+
+await update(board,{
+
+"clock/duration":remaining,
+
+"clock/startTime":null,
+
+"clock/running":false
+
+});
+
+
+};
+
+
+
+
+window.half=async(p)=>{
+
+
+await update(board,{
+
+period:p
+
+});
+
+
+};
+
+
+
+</script>
+
+
+</body>
+</html>
