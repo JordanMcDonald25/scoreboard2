@@ -8,7 +8,6 @@
 
 <title>Scoreboard 2</title>
 
-
 <style>
 
 body{
@@ -20,113 +19,80 @@ overflow:hidden;
 
 
 .wrapper{
-
 position:fixed;
 top:20px;
 left:50%;
 transform:translateX(-50%);
-
 width:92%;
 max-width:1100px;
-
 height:72px;
-
 display:flex;
-
 border-radius:12px;
 overflow:hidden;
-
 }
 
 
 .team{
-
 flex:1;
-
 display:flex;
 align-items:center;
 justify-content:center;
-
 gap:10px;
-
 font-size:22px;
 font-weight:bold;
-
 color:white;
-
 }
 
 
 .logo{
-
 width:42px;
 height:42px;
 object-fit:contain;
-
 }
 
 
 .home{
-
 background:#002b7f;
-
 }
 
 
 .away{
-
 background:#6a1032;
-
 }
-
 
 
 .center{
 
 width:240px;
-
 background:#050505;
-
 color:white;
 
 display:flex;
-
 flex-direction:column;
-
 align-items:center;
 justify-content:center;
 
 }
 
 
-
 .score{
-
 font-size:32px;
 font-weight:bold;
-
 }
-
 
 
 .timer{
-
 font-size:17px;
-
 }
-
 
 
 .periodBox{
 
 width:65px;
-
 background:#050505;
-
 color:white;
 
 display:flex;
-
 align-items:center;
 justify-content:center;
 
@@ -137,49 +103,34 @@ font-weight:bold;
 
 
 
-
-
 #tryBanner{
 
-
 position:fixed;
-
 top:20px;
-
 left:50%;
 transform:translateX(-50%);
-
 
 width:92%;
 max-width:1100px;
 
 height:72px;
 
-
 display:flex;
-
 align-items:center;
 justify-content:center;
 
-
 font-size:48px;
-
 font-weight:900;
 
 color:white;
 
-
 border-radius:12px;
-
 
 z-index:20;
 
-
 opacity:0;
 
-
 pointer-events:none;
-
 
 }
 
@@ -187,9 +138,7 @@ pointer-events:none;
 
 #tryBanner.active{
 
-
 animation:sweep 3s forwards;
-
 
 }
 
@@ -197,36 +146,28 @@ animation:sweep 3s forwards;
 
 @keyframes sweep{
 
-
 0%{
 opacity:0;
 }
-
 
 15%{
 opacity:1;
 }
 
-
 80%{
 opacity:1;
 }
-
 
 100%{
 opacity:0;
 }
 
-
 }
-
 
 
 </style>
 
-
 </head>
-
 
 
 <body>
@@ -242,21 +183,15 @@ TRY
 <div class="wrapper">
 
 
-
 <div class="team home" id="homeBox">
 
-
 <img class="logo" id="homeLogo" src="nsw.png">
-
 
 <span id="homeName">
 NSW
 </span>
 
-
 </div>
-
-
 
 
 
@@ -265,29 +200,21 @@ NSW
 
 <div class="score">
 
-<span id="homeScore">
-0
-</span>
-
+<span id="homeScore">0</span>
 -
-
-<span id="awayScore">
-0
-</span>
-
+<span id="awayScore">0</span>
 
 </div>
 
 
 <div class="timer" id="timer">
+
 15:00
-</div>
-
 
 </div>
 
 
-
+</div>
 
 
 
@@ -303,7 +230,6 @@ QLD
 
 
 </div>
-
 
 
 
@@ -325,7 +251,6 @@ H1
 <script type="module">
 
 
-
 import {initializeApp}
 
 from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
@@ -341,7 +266,6 @@ onValue
 }
 
 from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
-
 
 
 
@@ -368,12 +292,10 @@ appId:"1:577309983779:web:da1ade347e76f5174a5d96"
 
 
 
-
 const app=initializeApp(firebaseConfig);
 
 
 const db=getDatabase(app);
-
 
 
 const board=ref(db,"scoreboard");
@@ -384,31 +306,87 @@ let lastTry=0;
 
 
 
+let clock={
+
+duration:900,
+
+running:false,
+
+startTime:null
+
+};
+
+
+
 
 
 function format(seconds){
 
+seconds=Math.max(0,Math.floor(seconds));
 
-seconds=Math.max(0,seconds);
 
+let mins=Math.floor(seconds/60);
 
-let m=Math.floor(seconds/60);
-
-let s=seconds%60;
+let secs=seconds%60;
 
 
 return (
-
-String(m).padStart(2,"0")
+String(mins).padStart(2,"0")
 +
 ":"
 +
-String(s).padStart(2,"0")
+String(secs).padStart(2,"0")
+);
 
+}
+
+
+
+
+
+
+function updateTimer(){
+
+
+let remaining=clock.duration;
+
+
+
+if(
+clock.running &&
+clock.startTime
+){
+
+
+let elapsed =
+Math.floor(
+(Date.now()-clock.startTime)/1000
 );
 
 
+
+remaining =
+clock.duration - elapsed;
+
+
 }
+
+
+
+document.getElementById("timer").innerHTML =
+format(remaining);
+
+
+
+}
+
+
+
+
+
+// redraw timer every second
+setInterval(updateTimer,1000);
+
 
 
 
@@ -418,119 +396,92 @@ String(s).padStart(2,"0")
 onValue(board,(snap)=>{
 
 
-let d=snap.val();
-
+const d=snap.val();
 
 
 if(!d)return;
 
 
 
+const home=d.home;
 
-let home=d.home;
-
-let away=d.away;
-
+const away=d.away;
 
 
-document.getElementById("homeScore").innerHTML=
+
+document.getElementById("homeScore").innerHTML =
 home.score;
 
 
 
-document.getElementById("awayScore").innerHTML=
+document.getElementById("awayScore").innerHTML =
 away.score;
 
 
 
-document.getElementById("homeName").innerHTML=
+document.getElementById("homeName").innerHTML =
 home.name;
 
 
 
-document.getElementById("awayName").innerHTML=
+document.getElementById("awayName").innerHTML =
 away.name;
 
 
 
-
-document.getElementById("homeBox").style.background=
+document.getElementById("homeBox").style.background =
 home.color;
 
 
 
-document.getElementById("awayBox").style.background=
+document.getElementById("awayBox").style.background =
 away.color;
 
 
 
-
-
-document.getElementById("homeLogo").src=
+document.getElementById("homeLogo").src =
 home.logo;
 
 
 
-document.getElementById("awayLogo").src=
+document.getElementById("awayLogo").src =
 away.logo;
 
 
 
-
-
-document.getElementById("period").innerHTML=
+document.getElementById("period").innerHTML =
 d.period;
 
 
 
-if(d.clock.running && d.clock.startTime){
 
 
-let elapsed =
-Math.floor(
-(Date.now()-d.clock.startTime)/1000
-);
-
-
-document.getElementById("timer").innerHTML =
-format(
-d.clock.duration-elapsed
-);
-
-
-
-}else{
-
-
-document.getElementById("timer").innerHTML =
-format(d.clock.duration);
-
-
-}
+// timer data
+clock = d.clock;
 
 
 
 
 
+// try banner
 
 if(
-
 d.tryEventId &&
-d.tryEventId!==lastTry
-
+d.tryEventId !== lastTry
 ){
 
 
 lastTry=d.tryEventId;
 
 
-let banner=
+
+const banner =
 document.getElementById("tryBanner");
 
 
 
-banner.style.background=
-home.score>away.score
+banner.style.background =
+home.score >= away.score
 ?
 home.color
 :
@@ -547,9 +498,8 @@ void banner.offsetWidth;
 banner.classList.add("active");
 
 
+
 }
-
-
 
 
 
@@ -557,26 +507,10 @@ banner.classList.add("active");
 
 
 
-
-
-setInterval(()=>{
-
-
-let event =
-new Event("firebaseRefresh");
-
-
-window.dispatchEvent(event);
-
-
-},500);
-
-
-
 </script>
 
 
-
-
 </body>
+
+</html>
 </html>
