@@ -1,23 +1,21 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
 
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8">
 
 <title>Scoreboard 2</title>
 
 
 <style>
 
-
 body{
-
 margin:0;
 background:transparent;
-font-family:Arial;
+font-family:Arial,sans-serif;
 overflow:hidden;
-
 }
 
 
@@ -27,10 +25,14 @@ position:fixed;
 top:20px;
 left:50%;
 transform:translateX(-50%);
+
 width:92%;
 max-width:1100px;
-height:75px;
+
+height:72px;
+
 display:flex;
+
 border-radius:12px;
 overflow:hidden;
 
@@ -40,13 +42,26 @@ overflow:hidden;
 .team{
 
 flex:1;
+
 display:flex;
 align-items:center;
 justify-content:center;
+
 gap:10px;
+
 font-size:22px;
-color:white;
 font-weight:bold;
+
+color:white;
+
+}
+
+
+.logo{
+
+width:42px;
+height:42px;
+object-fit:contain;
 
 }
 
@@ -66,23 +81,18 @@ background:#6a1032;
 
 
 
-.logo{
-
-width:45px;
-height:45px;
-object-fit:contain;
-
-}
-
-
-
 .center{
 
 width:240px;
+
 background:#050505;
+
 color:white;
+
 display:flex;
+
 flex-direction:column;
+
 align-items:center;
 justify-content:center;
 
@@ -99,44 +109,131 @@ font-weight:bold;
 
 
 
-#try{
+.timer{
 
-position:fixed;
-top:20px;
-left:50%;
-transform:translateX(-50%);
-height:75px;
-width:92%;
-max-width:1100px;
-display:none;
+font-size:17px;
+
+}
+
+
+
+.periodBox{
+
+width:65px;
+
+background:#050505;
+
+color:white;
+
+display:flex;
+
 align-items:center;
 justify-content:center;
-font-size:48px;
+
+font-size:22px;
 font-weight:bold;
+
+}
+
+
+
+
+
+#tryBanner{
+
+
+position:fixed;
+
+top:20px;
+
+left:50%;
+transform:translateX(-50%);
+
+
+width:92%;
+max-width:1100px;
+
+height:72px;
+
+
+display:flex;
+
+align-items:center;
+justify-content:center;
+
+
+font-size:48px;
+
+font-weight:900;
+
 color:white;
+
+
 border-radius:12px;
 
+
+z-index:20;
+
+
+opacity:0;
+
+
+pointer-events:none;
+
+
 }
 
 
 
-.active{
+#tryBanner.active{
 
-display:flex!important;
+
+animation:sweep 3s forwards;
+
 
 }
+
+
+
+@keyframes sweep{
+
+
+0%{
+opacity:0;
+}
+
+
+15%{
+opacity:1;
+}
+
+
+80%{
+opacity:1;
+}
+
+
+100%{
+opacity:0;
+}
+
+
+}
+
 
 
 </style>
 
+
 </head>
+
 
 
 <body>
 
 
 
-<div id="try">
+<div id="tryBanner">
 TRY
 </div>
 
@@ -148,11 +245,18 @@ TRY
 
 <div class="team home" id="homeBox">
 
-<img id="homeLogo" class="logo">
 
-<span id="homeName"></span>
+<img class="logo" id="homeLogo" src="nsw.png">
+
+
+<span id="homeName">
+NSW
+</span>
+
 
 </div>
+
+
 
 
 
@@ -161,41 +265,55 @@ TRY
 
 <div class="score">
 
-<span id="homeScore">0</span>
+<span id="homeScore">
+0
+</span>
+
 -
-<span id="awayScore">0</span>
+
+<span id="awayScore">
+0
+</span>
+
 
 </div>
 
 
-<div id="clock">
-
+<div class="timer" id="timer">
 15:00
-
 </div>
 
 
 </div>
+
+
+
 
 
 
 <div class="team away" id="awayBox">
 
 
-<span id="awayName"></span>
+<span id="awayName">
+QLD
+</span>
 
 
-<img id="awayLogo" class="logo">
+<img class="logo" id="awayLogo" src="qld.png">
 
 
 </div>
 
 
-<div id="period">
+
+
+
+<div class="periodBox" id="period">
 
 H1
 
 </div>
+
 
 
 </div>
@@ -207,34 +325,58 @@ H1
 <script type="module">
 
 
-import {
-initializeApp
-} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+
+import {initializeApp}
+
+from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
 
 
+
 import {
+
 getDatabase,
 ref,
 onValue
-} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
+
+}
+
+from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
+
 
 
 
 
 const firebaseConfig={
 
+
 apiKey:"AIzaSyBEYrxxYkYkEzuHlHoc433EfI7mq8gvn60",
 
-databaseURL:"https://scoreboard2-5560e-default-rtdb.asia-southeast1.firebasedatabase.app",
+authDomain:"scoreboard2-5560e.firebaseapp.com",
 
-projectId:"scoreboard2-5560e"
+databaseURL:
+"https://scoreboard2-5560e-default-rtdb.asia-southeast1.firebasedatabase.app",
+
+projectId:"scoreboard2-5560e",
+
+storageBucket:"scoreboard2-5560e.firebasestorage.app",
+
+messagingSenderId:"577309983779",
+
+appId:"1:577309983779:web:da1ade347e76f5174a5d96"
 
 };
 
 
+
+
 const app=initializeApp(firebaseConfig);
 
+
 const db=getDatabase(app);
+
+
+
+const board=ref(db,"scoreboard");
 
 
 
@@ -242,120 +384,171 @@ let lastTry=0;
 
 
 
-function format(sec){
 
-let m=Math.floor(sec/60);
 
-let s=sec%60;
+function format(seconds){
+
+
+seconds=Math.max(0,seconds);
+
+
+let m=Math.floor(seconds/60);
+
+let s=seconds%60;
+
 
 return (
+
 String(m).padStart(2,"0")
 +
 ":"
 +
 String(s).padStart(2,"0")
+
 );
+
 
 }
 
 
 
 
-onValue(
-ref(db,"scoreboard"),
-snap=>{
+
+
+onValue(board,(snap)=>{
 
 
 let d=snap.val();
+
 
 
 if(!d)return;
 
 
 
-homeName.textContent=d.home.name;
 
-awayName.textContent=d.away.name;
+let home=d.home;
 
-
-homeScore.textContent=d.home.score;
-
-awayScore.textContent=d.away.score;
+let away=d.away;
 
 
 
-homeLogo.src=d.home.logo;
-
-awayLogo.src=d.away.logo;
-
-
-
-homeBox.style.background=d.home.color;
-
-awayBox.style.background=d.away.color;
+document.getElementById("homeScore").innerHTML=
+home.score;
 
 
 
-period.textContent=d.period;
+document.getElementById("awayScore").innerHTML=
+away.score;
 
 
 
-let time=d.clock.duration;
+document.getElementById("homeName").innerHTML=
+home.name;
 
 
 
-if(
-d.clock.running &&
-d.clock.startTime
-){
+document.getElementById("awayName").innerHTML=
+away.name;
 
-time -=
+
+
+
+document.getElementById("homeBox").style.background=
+home.color;
+
+
+
+document.getElementById("awayBox").style.background=
+away.color;
+
+
+
+
+
+document.getElementById("homeLogo").src=
+home.logo;
+
+
+
+document.getElementById("awayLogo").src=
+away.logo;
+
+
+
+
+
+document.getElementById("period").innerHTML=
+d.period;
+
+
+
+if(d.clock.running && d.clock.startTime){
+
+
+let elapsed =
 Math.floor(
 (Date.now()-d.clock.startTime)/1000
 );
 
+
+document.getElementById("timer").innerHTML =
+format(
+d.clock.duration-elapsed
+);
+
+
+
+}else{
+
+
+document.getElementById("timer").innerHTML =
+format(d.clock.duration);
+
+
 }
 
-
-
-clock.textContent=
-format(Math.max(0,time));
 
 
 
 
 
 if(
+
 d.tryEventId &&
 d.tryEventId!==lastTry
+
 ){
+
 
 lastTry=d.tryEventId;
 
 
-let t=document.getElementById("try");
+let banner=
+document.getElementById("tryBanner");
 
 
-t.style.background =
-d.home.score>d.away.score
+
+banner.style.background=
+home.score>away.score
 ?
-d.home.color
+home.color
 :
-d.away.color;
+away.color;
 
 
 
-t.classList.add("active");
+banner.classList.remove("active");
 
 
-setTimeout(()=>{
+void banner.offsetWidth;
 
-t.classList.remove("active");
 
-},3000);
+banner.classList.add("active");
 
 
 }
+
 
 
 
@@ -363,7 +556,26 @@ t.classList.remove("active");
 });
 
 
+
+
+
+setInterval(()=>{
+
+
+let event =
+new Event("firebaseRefresh");
+
+
+window.dispatchEvent(event);
+
+
+},500);
+
+
+
 </script>
+
+
 
 
 </body>
