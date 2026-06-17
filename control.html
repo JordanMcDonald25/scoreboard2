@@ -1,8 +1,10 @@
 <!DOCTYPE html>
-<html>
-<head>
+<html lang="en">
 
+<head>
 <meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8">
+
 <title>Scoreboard Control 2</title>
 
 <style>
@@ -11,7 +13,7 @@ body{
 margin:0;
 background:#050505;
 color:white;
-font-family:Arial;
+font-family:Arial,sans-serif;
 padding:10px;
 }
 
@@ -20,6 +22,10 @@ background:#161616;
 border-radius:18px;
 padding:12px;
 margin-bottom:12px;
+}
+
+h2{
+margin:5px 0 10px;
 }
 
 button{
@@ -50,11 +56,16 @@ input{
 width:100%;
 padding:12px;
 font-size:18px;
-box-sizing:border-box;
+border-radius:10px;
 background:#222;
 color:white;
 border:0;
-border-radius:10px;
+box-sizing:border-box;
+}
+
+.status{
+margin-top:10px;
+color:#aaa;
 }
 
 </style>
@@ -89,20 +100,36 @@ border-radius:10px;
 
 <h2>Clock</h2>
 
-<input id="mins" value="15" type="number">
+<input id="minutes" type="number" value="15">
 
 
-<button class="full" onclick="setClock()">SET TIME</button>
+<button class="full" onclick="setTime()">SET TIME</button>
 
 <button class="full" onclick="startClock()">START</button>
 
 <button class="full" onclick="pauseClock()">PAUSE</button>
 
-<button class="full" onclick="half('H1')">HALF 1</button>
-
-<button class="full" onclick="half('H2')">HALF 2</button>
+<button class="full" onclick="resetClock()">RESET</button>
 
 
+</div>
+
+
+<div class="card">
+
+<button class="full" onclick="setHalf('H1')">
+HALF 1
+</button>
+
+<button class="full" onclick="setHalf('H2')">
+HALF 2
+</button>
+
+</div>
+
+
+<div class="status" id="status">
+Connecting...
 </div>
 
 
@@ -110,27 +137,33 @@ border-radius:10px;
 <script type="module">
 
 
-import {
-initializeApp
-} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
+import {initializeApp}
+from "https://www.gstatic.com/firebasejs/12.14.0/firebase-app.js";
 
 
 import {
+
 getDatabase,
 ref,
 get,
-update
-} from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
+update,
+onValue
+
+}
+
+from "https://www.gstatic.com/firebasejs/12.14.0/firebase-database.js";
 
 
 
-const firebaseConfig = {
+const firebaseConfig={
+
 
 apiKey:"AIzaSyBEYrxxYkYkEzuHlHoc433EfI7mq8gvn60",
 
 authDomain:"scoreboard2-5560e.firebaseapp.com",
 
-databaseURL:"https://scoreboard2-5560e-default-rtdb.asia-southeast1.firebasedatabase.app",
+databaseURL:
+"https://scoreboard2-5560e-default-rtdb.asia-southeast1.firebasedatabase.app",
 
 projectId:"scoreboard2-5560e",
 
@@ -143,6 +176,7 @@ appId:"1:577309983779:web:da1ade347e76f5174a5d96"
 };
 
 
+
 const app=initializeApp(firebaseConfig);
 
 const db=getDatabase(app);
@@ -152,11 +186,22 @@ const board=ref(db,"scoreboard");
 
 
 
-async function data(){
+async function read(){
 
-return (await get(board)).val();
+let snap=await get(board);
+
+return snap.val();
 
 }
+
+
+
+async function patch(data){
+
+await update(board,data);
+
+}
+
 
 
 
@@ -164,49 +209,56 @@ return (await get(board)).val();
 window.score=async(team,value)=>{
 
 
-let d=await data();
+let d=await read();
 
 
 let current=d[team].score || 0;
 
 
-let patch={};
+let change=Math.max(0,current+value);
 
 
-patch[team+"/score"]=
-Math.max(0,current+value);
+let updateData={};
+
+
+updateData[team+"/score"]=change;
 
 
 
 if(value>0){
 
-patch["tryEventId"]=Date.now();
+updateData["tryEventId"]=Date.now();
 
 }
 
 
-await update(board,patch);
+
+await patch(updateData);
+
+
 
 };
 
 
 
 
-window.setClock=async()=>{
 
 
-let mins=
-Number(document.getElementById("mins").value);
+window.setTime=async()=>{
 
 
+let mins=parseInt(
+document.getElementById("minutes").value
+);
 
-await update(board,{
+
+await patch({
 
 "clock/duration":mins*60,
 
-"clock/startTime":null,
+"clock/running":false,
 
-"clock/running":false
+"clock/startTime":null
 
 });
 
@@ -216,10 +268,16 @@ await update(board,{
 
 
 
+
+
+
 window.startClock=async()=>{
 
 
-await update(board,{
+let d=await read();
+
+
+await patch({
 
 "clock/running":true,
 
@@ -233,34 +291,57 @@ await update(board,{
 
 
 
+
+
+
 window.pauseClock=async()=>{
 
 
-let d=await data();
+let d=await read();
 
 
-let elapsed=
-Math.floor(
-(Date.now()-d.clock.startTime)/1000
+let elapsed =
+Math.floor((Date.now()-d.clock.startTime)/1000);
+
+
+
+await patch({
+
+"clock/duration":
+Math.max(0,d.clock.duration-elapsed),
+
+"clock/running":false,
+
+"clock/startTime":null
+
+});
+
+
+};
+
+
+
+
+
+
+
+window.resetClock=async()=>{
+
+
+let mins=parseInt(
+document.getElementById("minutes").value
 );
 
 
+await patch({
 
-let remaining =
-Math.max(
-0,
-d.clock.duration-elapsed
-);
+"clock/duration":mins*60,
 
-
-
-await update(board,{
-
-"clock/duration":remaining,
+"clock/running":false,
 
 "clock/startTime":null,
 
-"clock/running":false
+"tryEventId":0
 
 });
 
@@ -270,17 +351,47 @@ await update(board,{
 
 
 
-window.half=async(p)=>{
 
 
-await update(board,{
 
-period:p
+window.setHalf=async(h)=>{
+
+
+await patch({
+
+period:h
 
 });
 
 
 };
+
+
+
+
+
+
+
+onValue(board,(snap)=>{
+
+
+let d=snap.val();
+
+
+if(d){
+
+document.getElementById("status").innerHTML=
+"Connected | "+
+d.period+
+" | "+
+d.home.score+
+" - "+
+d.away.score;
+
+}
+
+
+});
 
 
 
